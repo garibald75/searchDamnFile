@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project follows semantic
 versioning when tagged releases are published.
 
+## Unreleased
+
+### Changed
+
+- The search field (formerly "Query") is now the first control on the top bar and
+  receives focus automatically on launch, so you can start typing immediately.
+- Renamed labels: "Query" → "Search", "Root" → "Start Search Path".
+- Folders now bypass the content filter: when content search is active, folders
+  still appear in results if their name matches, rather than being excluded.
+
 ## [0.1.0] - 2026-06-17
 
 ### Added
@@ -17,8 +27,6 @@ versioning when tagged releases are published.
 - Press `Enter` in the result list to open the selected file or folder.
 - Multi-select support for copy path and copy name: all selected rows are joined
   with newlines and placed on the clipboard.
-- The `Folders` checkbox is automatically disabled while content search is active,
-  making it clear that directory entries cannot be matched by content.
 
 ### Fixed
 

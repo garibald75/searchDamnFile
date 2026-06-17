@@ -69,7 +69,7 @@ publish\SearchDamnFile.exe
 
 ## Usage Notes
 
-- Press `Enter` in the query field to start a search.
+- Press `Enter` in the Search field to start a search.
 - Set `Max depth` to `0` to search only the selected root folder.
 - Extension filters accept comma-separated values such as `cs,txt,md`.
 - Path filters accept comma-separated text fragments matched against the full path.
@@ -102,8 +102,8 @@ tools\capture-assets.cmd
 Create a release by pushing a version tag:
 
 ```cmd
-git tag v0.1.0
-git push origin v0.1.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 The release workflow builds `SearchDamnFile.exe`, packages it as a zip file, and
