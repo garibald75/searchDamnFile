@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Windows x64 executable
+        shell: cmd
+        run: publish-win-x64.cmd
+
+      - name: Package executable
+        shell: pwsh
+        run: Compress-Archive -Path publish/SearchDamnFile.exe -DestinationPath publish/SearchDamnFile-win-x64.zip -Force
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          if (gh release view $tag 2>$null) {
+            gh release upload $tag publish/SearchDamnFile-win-x64.zip --clobber
+          } else {
+            gh release create $tag publish/SearchDamnFile-win-x64.zip --title $tag --generate-notes
+          }

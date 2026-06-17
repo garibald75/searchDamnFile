@@ -1,7 +1,43 @@
+# Build outputs
 bin/
 obj/
 publish/
+Debug/
+Release/
+x64/
+x86/
+
+# Compiled binaries and release packages
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.obj
+*.lib
+*.exp
+*.zip
+*.7z
+*.msi
+*.nupkg
+
+# Visual Studio / local IDE state
 .vs/
+.vscode/
+.idea/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
+
+# Logs and diagnostics
 *.log
+*.tlog
+*.tmp
+*.cache
+TestResults/
+coverage/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
