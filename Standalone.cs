@@ -63,6 +63,7 @@ namespace SearchDamnFileStandalone
         public bool IsDirectory;
         public long? Size;
         public DateTime ModifiedUtc;
+        public string ContentMatch;
     }
 
     internal sealed class SearchProgress
@@ -228,7 +229,8 @@ namespace SearchDamnFileStandalone
                     if (!MatchesMetadata(entry, isDirectory, options, out size))
                         continue;
 
-                    if (!MatchesContent(entry, isDirectory, options, contentMatcher, size))
+                    string contentExcerpt;
+                    if (!MatchesContent(entry, isDirectory, options, contentMatcher, size, out contentExcerpt))
                         continue;
 
                     matched++;
@@ -238,7 +240,8 @@ namespace SearchDamnFileStandalone
                         FullPath = entry.FullName,
                         IsDirectory = isDirectory,
                         Size = isDirectory ? null : size,
-                        ModifiedUtc = entry.LastWriteTimeUtc
+                        ModifiedUtc = entry.LastWriteTimeUtc,
+                        ContentMatch = contentExcerpt
                     });
 
                     if (batch.Count >= 256)
@@ -342,7 +345,7 @@ namespace SearchDamnFileStandalone
 
             try
             {
-                size = new FileInfo(entry.FullName).Length;
+                size = ((FileInfo)entry).Length;
             }
             catch
             {
@@ -358,8 +361,9 @@ namespace SearchDamnFileStandalone
             return true;
         }
 
-        private static bool MatchesContent(FileSystemInfo entry, bool isDirectory, SearchOptions options, Func<string, bool> contentMatcher, long? size)
+        private static bool MatchesContent(FileSystemInfo entry, bool isDirectory, SearchOptions options, Func<string, bool> contentMatcher, long? size, out string excerpt)
         {
+            excerpt = null;
             if (!options.SearchContent || string.IsNullOrWhiteSpace(options.ContentQuery))
                 return true;
 
@@ -372,13 +376,31 @@ namespace SearchDamnFileStandalone
                 using (var reader = new StreamReader(stream, true))
                 {
                     var text = reader.ReadToEnd();
-                    return text.IndexOf('\0') < 0 && contentMatcher(text);
+                    if (text.IndexOf('\0') >= 0 || !contentMatcher(text))
+                        return false;
+                    excerpt = FirstMatchingLine(text, contentMatcher);
+                    return true;
                 }
             }
             catch
             {
                 return false;
             }
+        }
+
+        private static string FirstMatchingLine(string text, Func<string, bool> contentMatcher)
+        {
+            int start = 0;
+            while (start < text.Length)
+            {
+                int end = text.IndexOf('\n', start);
+                if (end < 0) end = text.Length;
+                var line = text.Substring(start, end - start).Trim('\r', '\t', ' ');
+                if (line.Length > 0 && contentMatcher(line))
+                    return line.Length > 200 ? line.Substring(0, 200) + "…" : line;
+                start = end + 1;
+            }
+            return null;
         }
 
         private static void Flush(List<SearchResult> batch, Action<List<SearchResult>> onBatch)
@@ -445,6 +467,9 @@ namespace SearchDamnFileStandalone
         private CancellationTokenSource _cts;
         private int _generation;
         private int _dragIndex = -1;
+        private int _sortColumn = -1;
+        private bool _sortAscending = true;
+        private static readonly string[] _columnHeaders = { "Type", "Name", "Size", "Modified", "Path", "Match" };
 
         public MainForm()
         {
@@ -599,7 +624,8 @@ namespace SearchDamnFileStandalone
             _list.Columns.Add("Name", 290);
             _list.Columns.Add("Size", 110, HorizontalAlignment.Right);
             _list.Columns.Add("Modified", 165);
-            _list.Columns.Add("Path", 620);
+            _list.Columns.Add("Path", 380);
+            _list.Columns.Add("Match", 240);
             _list.RetrieveVirtualItem += RetrieveVirtualItem;
             return _list;
         }
@@ -629,6 +655,9 @@ namespace SearchDamnFileStandalone
                 }
             };
             _list.MouseDoubleClick += delegate { OpenSelected(); };
+            _list.KeyDown += delegate(object sender, KeyEventArgs e) { if (e.KeyCode == Keys.Enter) OpenSelected(); };
+            _list.ColumnClick += delegate(object sender, ColumnClickEventArgs e) { SortBy(e.Column); };
+            _content.CheckedChanged += delegate { _folders.Enabled = !_content.Checked; };
             _list.MouseDown += delegate(object sender, MouseEventArgs e)
             {
                 var item = _list.GetItemAt(e.X, e.Y);
@@ -676,11 +705,25 @@ namespace SearchDamnFileStandalone
 
             await _engine.RunAsync(
                 options,
-                delegate(List<SearchResult> batch) { BeginInvoke(new Action(delegate { if (generation == _generation) AddBatch(batch); })); },
-                delegate(SearchProgress progress) { BeginInvoke(new Action(delegate { if (generation == _generation) UpdateProgress(progress); })); },
-                delegate(SearchSummary summary) { BeginInvoke(new Action(delegate { if (generation == _generation) Finish(summary); })); },
-                delegate(Exception error) { BeginInvoke(new Action(delegate { if (generation == _generation) Fail(error); })); },
+                delegate(List<SearchResult> batch) { SafeInvoke(delegate { if (generation == _generation) AddBatch(batch); }); },
+                delegate(SearchProgress progress) { SafeInvoke(delegate { if (generation == _generation) UpdateProgress(progress); }); },
+                delegate(SearchSummary summary) { SafeInvoke(delegate { if (generation == _generation) Finish(summary); }); },
+                delegate(Exception error) { SafeInvoke(delegate { if (generation == _generation) Fail(error); }); },
                 _cts.Token);
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (_cts != null) { _cts.Cancel(); _cts.Dispose(); _cts = null; }
+            base.OnFormClosing(e);
+        }
+
+        private void SafeInvoke(Action action)
+        {
+            if (IsDisposed || !IsHandleCreated)
+                return;
+            try { BeginInvoke(action); }
+            catch (ObjectDisposedException) { }
         }
 
         private void StopSearch()
@@ -693,6 +736,7 @@ namespace SearchDamnFileStandalone
             if (_cts == null)
                 return;
             _cts.Cancel();
+            _cts.Dispose();
             _cts = null;
             _generation++;
             _search.Enabled = true;
@@ -707,10 +751,17 @@ namespace SearchDamnFileStandalone
             if (!Directory.Exists(root))
                 throw new DirectoryNotFoundException("Root path not found.");
 
+            string query = _query.Text.Trim();
+            if (_regex.Checked && !string.IsNullOrWhiteSpace(query))
+            {
+                try { new Regex(query); }
+                catch (ArgumentException ex) { throw new ArgumentException("Invalid regular expression: " + ex.Message); }
+            }
+
             return new SearchOptions
             {
                 RootPath = root,
-                Query = _query.Text.Trim(),
+                Query = query,
                 Target = _target.SelectedIndex == 1 ? SearchTarget.FullPath : SearchTarget.Name,
                 IncludeFiles = _files.Checked,
                 IncludeFolders = _folders.Checked,
@@ -751,7 +802,7 @@ namespace SearchDamnFileStandalone
 
         private void Finish(SearchSummary s)
         {
-            _cts = null;
+            if (_cts != null) { _cts.Dispose(); _cts = null; }
             _search.Enabled = true;
             _stop.Enabled = false;
             _status.Text = string.Format("Done in {0:n2}s | scanned {1:n0} | errors {2:n0}{3}", s.Elapsed.TotalSeconds, s.Visited, s.Errors, s.Limited ? " | limit reached" : "");
@@ -760,7 +811,7 @@ namespace SearchDamnFileStandalone
 
         private void Fail(Exception ex)
         {
-            _cts = null;
+            if (_cts != null) { _cts.Dispose(); _cts = null; }
             _search.Enabled = true;
             _stop.Enabled = false;
             _status.Text = ex.Message;
@@ -774,6 +825,7 @@ namespace SearchDamnFileStandalone
             item.SubItems.Add(FormatSize(r.Size));
             item.SubItems.Add(r.ModifiedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"));
             item.SubItems.Add(r.FullPath);
+            item.SubItems.Add(r.ContentMatch ?? "");
             e.Item = item;
         }
 
@@ -794,7 +846,8 @@ namespace SearchDamnFileStandalone
             var r = Selected();
             if (r == null)
                 return;
-            Process.Start(new ProcessStartInfo(r.FullPath) { UseShellExecute = true });
+            try { Process.Start(new ProcessStartInfo(r.FullPath) { UseShellExecute = true }); }
+            catch (Exception ex) { MessageBox.Show(this, ex.Message, "Cannot open", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         }
 
         private void RevealSelected()
@@ -807,16 +860,54 @@ namespace SearchDamnFileStandalone
 
         private void CopyPath()
         {
-            var r = Selected();
-            if (r != null)
-                Clipboard.SetText(r.FullPath);
+            var indices = _list.SelectedIndices;
+            var paths = new List<string>(indices.Count);
+            foreach (int i in indices)
+                if (i >= 0 && i < _results.Count)
+                    paths.Add(_results[i].FullPath);
+            if (paths.Count > 0)
+                Clipboard.SetText(string.Join(Environment.NewLine, paths));
         }
 
         private void CopyName()
         {
-            var r = Selected();
-            if (r != null)
-                Clipboard.SetText(r.Name);
+            var indices = _list.SelectedIndices;
+            var names = new List<string>(indices.Count);
+            foreach (int i in indices)
+                if (i >= 0 && i < _results.Count)
+                    names.Add(_results[i].Name);
+            if (names.Count > 0)
+                Clipboard.SetText(string.Join(Environment.NewLine, names));
+        }
+
+        private void SortBy(int column)
+        {
+            if (_sortColumn == column)
+                _sortAscending = !_sortAscending;
+            else
+            {
+                _sortColumn = column;
+                _sortAscending = true;
+            }
+
+            for (int i = 0; i < _list.Columns.Count; i++)
+                _list.Columns[i].Text = _columnHeaders[i];
+            _list.Columns[column].Text = _columnHeaders[column] + (_sortAscending ? " ▲" : " ▼");
+
+            _results.Sort(delegate(SearchResult a, SearchResult b)
+            {
+                int cmp;
+                switch (column)
+                {
+                    case 0: cmp = a.IsDirectory.CompareTo(b.IsDirectory); break;
+                    case 1: cmp = string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase); break;
+                    case 2: cmp = Nullable.Compare(a.Size, b.Size); break;
+                    case 3: cmp = a.ModifiedUtc.CompareTo(b.ModifiedUtc); break;
+                    default: cmp = string.Compare(a.FullPath, b.FullPath, StringComparison.OrdinalIgnoreCase); break;
+                }
+                return _sortAscending ? cmp : -cmp;
+            });
+            _list.Invalidate();
         }
 
         private SearchResult Selected()

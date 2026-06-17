@@ -24,10 +24,13 @@ no installer, and no SDK-style project file required.
   `dist`, and `build`.
 - Include/exclude filters for extensions and paths.
 - Size, modified date, max depth, and result limit filters.
-- Optional text-content search with a per-file size limit.
+- Optional text-content search with a per-file size limit. The first matching line
+  from each file is shown in the `Match` column of the results.
 - Virtualized result list for large result sets.
-- Double-click to open a file or folder.
+- Double-click or press Enter to open a file or folder.
+- Click any column header to sort results; click again to reverse the order.
 - Context menu actions: open, open containing folder, copy path, copy name.
+- Copy path and copy name support multiple selected items.
 - Drag and drop results to other apps using the native `FileDrop` format.
 
 ## Requirements
@@ -70,7 +73,11 @@ publish\SearchDamnFile.exe
 - Set `Max depth` to `0` to search only the selected root folder.
 - Extension filters accept comma-separated values such as `cs,txt,md`.
 - Path filters accept comma-separated text fragments matched against the full path.
-- Content search reads text files up to the configured `Max text file` size.
+- Content search reads text files up to the configured `Max text file` size. The
+  `Folders` option is automatically disabled while content search is active.
+- Hold `Ctrl` or `Shift` to select multiple results; copy path and copy name act on
+  the entire selection.
+- Click a column header to sort results; click again to reverse the order.
 - Files and directories that cannot be accessed are skipped and counted as errors in
   the status bar.
 
