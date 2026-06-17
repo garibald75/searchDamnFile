@@ -367,7 +367,9 @@ namespace SearchDamnFileStandalone
             if (!options.SearchContent || string.IsNullOrWhiteSpace(options.ContentQuery))
                 return true;
 
-            if (isDirectory || !size.HasValue || size.Value > options.ContentMaxBytes)
+            if (isDirectory)
+                return true;
+            if (!size.HasValue || size.Value > options.ContentMaxBytes)
                 return false;
 
             try
@@ -510,37 +512,37 @@ namespace SearchDamnFileStandalone
         private Control BuildTop()
         {
             var p = PanelGrid(7, 2);
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 18));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 210));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 18));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84));
             p.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
             p.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
 
-            p.Controls.Add(Label("Root"), 0, 0);
-            p.Controls.Add(Label("Query"), 3, 0);
-            p.Controls.Add(Label("Target"), 4, 0);
-
-            _root.Text = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            StyleText(_root);
-            p.Controls.Add(_root, 0, 1);
-
-            _browse.Text = "Browse";
-            StyleButton(_browse, false);
-            p.Controls.Add(_browse, 1, 1);
+            p.Controls.Add(Label("Search"), 0, 0);
+            p.Controls.Add(Label("Target"), 1, 0);
+            p.Controls.Add(Label("Start Search Path"), 3, 0);
 
             StyleText(_query);
-            p.Controls.Add(_query, 3, 1);
+            p.Controls.Add(_query, 0, 1);
 
             _target.DropDownStyle = ComboBoxStyle.DropDownList;
             _target.Items.Add("Name");
             _target.Items.Add("Full path");
             _target.SelectedIndex = 0;
             StyleCombo(_target);
-            p.Controls.Add(_target, 4, 1);
+            p.Controls.Add(_target, 1, 1);
+
+            _root.Text = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            StyleText(_root);
+            p.Controls.Add(_root, 3, 1);
+
+            _browse.Text = "Browse";
+            StyleButton(_browse, false);
+            p.Controls.Add(_browse, 4, 1);
 
             _search.Text = "Search";
             StyleButton(_search, true);
@@ -642,6 +644,7 @@ namespace SearchDamnFileStandalone
 
         private void WireEvents()
         {
+            Load += delegate { _query.Focus(); };
             _browse.Click += delegate { Browse(); };
             _search.Click += delegate { StartSearch(); };
             _stop.Click += delegate { StopSearch(); };
@@ -657,7 +660,6 @@ namespace SearchDamnFileStandalone
             _list.MouseDoubleClick += delegate { OpenSelected(); };
             _list.KeyDown += delegate(object sender, KeyEventArgs e) { if (e.KeyCode == Keys.Enter) OpenSelected(); };
             _list.ColumnClick += delegate(object sender, ColumnClickEventArgs e) { SortBy(e.Column); };
-            _content.CheckedChanged += delegate { _folders.Enabled = !_content.Checked; };
             _list.MouseDown += delegate(object sender, MouseEventArgs e)
             {
                 var item = _list.GetItemAt(e.X, e.Y);

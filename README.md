@@ -73,8 +73,8 @@ publish\SearchDamnFile.exe
 - Set `Max depth` to `0` to search only the selected root folder.
 - Extension filters accept comma-separated values such as `cs,txt,md`.
 - Path filters accept comma-separated text fragments matched against the full path.
-- Content search reads text files up to the configured `Max text file` size. The
-  `Folders` option is automatically disabled while content search is active.
+- Content search reads text files up to the configured `Max text file` size.
+  Folders are matched by name only and are never excluded by the content filter.
 - Hold `Ctrl` or `Shift` to select multiple results; copy path and copy name act on
   the entire selection.
 - Click a column header to sort results; click again to reverse the order.
