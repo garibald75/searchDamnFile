@@ -66,16 +66,16 @@ internal static class CaptureAssets
         var results = (List<SearchResult>)resultsField.GetValue(form);
         results.Clear();
 
-        AddResult(results, root, "Standalone.cs");
-        AddResult(results, root, "README.md");
-        AddResult(results, root, "publish-win-x64.cmd");
+        AddResult(results, root, "Standalone.cs", "internal sealed class SearchEngine");
+        AddResult(results, root, "README.md", "Search Damn File is a small Windows desktop file finder");
+        AddResult(results, root, "publish-win-x64.cmd", null);
 
         var list = (ListView)listField.GetValue(form);
         list.VirtualListSize = results.Count;
         list.Invalidate();
     }
 
-    private static void AddResult(List<SearchResult> results, string root, string name)
+    private static void AddResult(List<SearchResult> results, string root, string name, string contentMatch)
     {
         string path = Path.Combine(root, name);
         var info = new FileInfo(path);
@@ -86,7 +86,8 @@ internal static class CaptureAssets
             FullPath = path,
             IsDirectory = false,
             Size = info.Exists ? (long?)info.Length : null,
-            ModifiedUtc = info.Exists ? info.LastWriteTimeUtc : DateTime.UtcNow
+            ModifiedUtc = info.Exists ? info.LastWriteTimeUtc : DateTime.UtcNow,
+            ContentMatch = contentMatch
         });
     }
 
