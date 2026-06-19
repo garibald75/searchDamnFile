@@ -660,6 +660,8 @@ namespace SearchDamnFileStandalone
             _menu.Items.Add(new ToolStripSeparator());
             _menu.Items.Add("Copy path", null, delegate { CopyPath(); });
             _menu.Items.Add("Copy name", null, delegate { CopyName(); });
+            _menu.Items.Add(new ToolStripSeparator());
+            _menu.Items.Add("Export to CSV…", null, delegate { ExportCsv(); });
             _list.ContextMenuStrip = _menu;
         }
 
@@ -907,6 +909,48 @@ namespace SearchDamnFileStandalone
                     names.Add(_results[i].Name);
             if (names.Count > 0)
                 Clipboard.SetText(string.Join(Environment.NewLine, names));
+        }
+
+        private void ExportCsv()
+        {
+            if (_results.Count == 0)
+                return;
+            using (var dlg = new SaveFileDialog())
+            {
+                dlg.Title = "Export results";
+                dlg.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                dlg.DefaultExt = "csv";
+                dlg.FileName = "search-results.csv";
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                try
+                {
+                    using (var w = new StreamWriter(dlg.FileName, false, new System.Text.UTF8Encoding(true)))
+                    {
+                        w.WriteLine("Type,Name,Size,Modified,Path,Match");
+                        foreach (var r in _results)
+                        {
+                            w.Write(CsvField(r.IsDirectory ? "Folder" : "File")); w.Write(',');
+                            w.Write(CsvField(r.Name)); w.Write(',');
+                            w.Write(r.Size.HasValue ? r.Size.Value.ToString() : ""); w.Write(',');
+                            w.Write(CsvField(r.ModifiedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"))); w.Write(',');
+                            w.Write(CsvField(r.FullPath)); w.Write(',');
+                            w.WriteLine(CsvField(r.ContentMatch ?? ""));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, ex.Message, "Export failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private static string CsvField(string value)
+        {
+            if (value.IndexOfAny(new char[] { ',', '"', '\r', '\n' }) < 0)
+                return value;
+            return "\"" + value.Replace("\"", "\"\"") + "\"";
         }
 
         private void SortBy(int column)

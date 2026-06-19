@@ -26,6 +26,8 @@ no installer, and no SDK-style project file required.
 - Size, modified date, max depth, and result limit filters.
 - Optional text-content search with a per-file size limit. The first matching line
   from each file is shown in the `Match` column of the results.
+- Export results to CSV: right-click → **Export to CSV…** saves all current results
+  (Type, Name, Size, Modified, Path, Match) as a UTF-8 CSV file.
 - Virtualized result list for large result sets.
 - Double-click or press Enter to open a file or folder.
 - Click any column header to sort results; click again to reverse the order.

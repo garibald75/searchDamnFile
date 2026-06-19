@@ -9,6 +9,9 @@ versioning when tagged releases are published.
 
 ### Added
 
+- Export results to CSV: right-click the result list and choose **Export to CSV…** to
+  save all current results with Type, Name, Size, Modified, Path, and Match columns.
+  The file is UTF-8 encoded and opens correctly in Excel and other spreadsheet apps.
 - Wildcard mask support in the Search field: `*` matches any sequence of characters,
   `?` matches a single character (e.g. `*.cs`, `report_202?_*`). Wildcards are
   detected automatically when the query contains `*` or `?` and Regex is not active.
