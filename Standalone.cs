@@ -600,12 +600,14 @@ namespace SearchDamnFileStandalone
             contentWrap.Margin = new Padding(0, 0, 8, 0);
             _content.Text = "Content";
             _content.Checked = false;
-            _content.Dock = DockStyle.Fill;
+            _content.Dock = DockStyle.Top;
+            _content.Margin = new Padding(0, 3, 0, 0);
+            _content.MinimumSize = new Size(0, 25);
             _content.ForeColor = Color.FromArgb(24, 32, 40);
             contentWrap.Controls.Add(_content, 0, 1);
             p.Controls.Add(contentWrap, 0, 3);
-            p.SetColumnSpan(contentWrap, 2);
-            AddText(p, "Text", _contentText, 2, 3, 6);
+            p.SetColumnSpan(contentWrap, 1);
+            AddText(p, "Text", _contentText, 1, 3, 7);
             AddSize(p, "Max text file", _contentMax, _contentUnit, 8, 3, 3);
             AddNumber(p, "Limit", _limit, 1, 1000000, 100000, 11, 3, 3);
             _contentMax.Value = 2;

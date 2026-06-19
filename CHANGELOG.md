@@ -20,6 +20,9 @@ versioning when tagged releases are published.
 - Renamed labels: "Query" → "Search", "Root" → "Start Search Path".
 - Folders now bypass the content filter: when content search is active, folders
   still appear in results if their name matches, rather than being excluded.
+- Content checkbox and text field are now flush on the same row with consistent
+  vertical alignment.
+- Search button now grays out visually while a search is running.
 
 ## [0.1.0] - 2026-06-17
 
