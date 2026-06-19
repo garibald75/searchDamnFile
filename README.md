@@ -16,7 +16,7 @@ no installer, and no SDK-style project file required.
 
 - Native WinForms desktop UI.
 - Background search with cancellation.
-- Search by file name or full path.
+- Search by file name or full path, with wildcard (`*`, `?`), regex, and whole-word modes.
 - File and folder results.
 - Optional regex, case-sensitive, and whole-word matching.
 - Include or exclude hidden/system items and reparse points.
@@ -70,6 +70,9 @@ publish\SearchDamnFile.exe
 ## Usage Notes
 
 - Press `Enter` in the Search field to start a search.
+- Wildcard masks are supported: `*` matches any sequence of characters, `?` matches
+  a single character (e.g. `*.cs`, `report_202?_*`). Wildcards anchor to the full
+  name or path; use `*keyword*` to match anywhere.
 - Set `Max depth` to `0` to search only the selected root folder.
 - Extension filters accept comma-separated values such as `cs,txt,md`.
 - Path filters accept comma-separated text fragments matched against the full path.

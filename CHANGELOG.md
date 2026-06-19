@@ -7,6 +7,12 @@ versioning when tagged releases are published.
 
 ## Unreleased
 
+### Added
+
+- Wildcard mask support in the Search field: `*` matches any sequence of characters,
+  `?` matches a single character (e.g. `*.cs`, `report_202?_*`). Wildcards are
+  detected automatically when the query contains `*` or `?` and Regex is not active.
+
 ### Changed
 
 - The search field (formerly "Query") is now the first control on the top bar and

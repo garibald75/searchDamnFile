@@ -283,6 +283,13 @@ namespace SearchDamnFileStandalone
                 return delegate(string value) { return rx.IsMatch(value); };
             }
 
+            if (options.Query.IndexOfAny(new char[] { '*', '?' }) >= 0)
+            {
+                var pattern = "^" + Regex.Escape(options.Query).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
+                var rx = new Regex(pattern, regexOptions);
+                return delegate(string value) { return rx.IsMatch(value); };
+            }
+
             var comparison = options.CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
             return delegate(string value) { return value.IndexOf(options.Query, comparison) >= 0; };
         }
@@ -645,6 +652,12 @@ namespace SearchDamnFileStandalone
         private void WireEvents()
         {
             Load += delegate { _query.Focus(); };
+            _search.EnabledChanged += delegate
+            {
+                _search.BackColor = _search.Enabled ? Color.FromArgb(25, 118, 210) : Color.FromArgb(200, 210, 220);
+                _search.FlatAppearance.BorderColor = _search.Enabled ? Color.FromArgb(25, 118, 210) : Color.FromArgb(188, 198, 208);
+                _search.ForeColor = _search.Enabled ? Color.White : Color.FromArgb(140, 150, 160);
+            };
             _browse.Click += delegate { Browse(); };
             _search.Click += delegate { StartSearch(); };
             _stop.Click += delegate { StopSearch(); };
