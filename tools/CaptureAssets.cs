@@ -48,8 +48,10 @@ internal static class CaptureAssets
             Pump();
             Capture(form, query);
 
+            SetCheck(form, "_content", true);
+            SetText(form, "_contentText", "sealed class");
             PopulateDemoResults(form, root);
-            SetStatus(form, "Done in 0.03s | scanned 9 | errors 0", "3 results");
+            SetStatus(form, "Done in 0.14s | scanned 847 | errors 0", "3 results");
             Pump();
             Capture(form, results);
 
@@ -107,6 +109,12 @@ internal static class CaptureAssets
     {
         var box = (TextBox)Field(form, fieldName).GetValue(form);
         box.Text = value;
+    }
+
+    private static void SetCheck(MainForm form, string fieldName, bool value)
+    {
+        var box = (CheckBox)Field(form, fieldName).GetValue(form);
+        box.Checked = value;
     }
 
     private static void SetStatus(MainForm form, string status, string stats)
