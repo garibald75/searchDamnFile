@@ -592,7 +592,19 @@ namespace SearchDamnFileStandalone
             AddDate(p, "Modified from", _from, 8, 2, 3);
             AddDate(p, "Modified to", _to, 11, 2, 3);
 
-            AddCheck(p, _content, "Content", false, 0, 3, 2);
+            var contentWrap = new TableLayoutPanel();
+            contentWrap.Dock = DockStyle.Fill;
+            contentWrap.RowCount = 2;
+            contentWrap.RowStyles.Add(new RowStyle(SizeType.Absolute, 18));
+            contentWrap.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            contentWrap.Margin = new Padding(0, 0, 8, 0);
+            _content.Text = "Content";
+            _content.Checked = false;
+            _content.Dock = DockStyle.Fill;
+            _content.ForeColor = Color.FromArgb(24, 32, 40);
+            contentWrap.Controls.Add(_content, 0, 1);
+            p.Controls.Add(contentWrap, 0, 3);
+            p.SetColumnSpan(contentWrap, 2);
             AddText(p, "Text", _contentText, 2, 3, 6);
             AddSize(p, "Max text file", _contentMax, _contentUnit, 8, 3, 3);
             AddNumber(p, "Limit", _limit, 1, 1000000, 100000, 11, 3, 3);
