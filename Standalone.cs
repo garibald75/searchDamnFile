@@ -9,8 +9,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+[assembly: System.Reflection.AssemblyTitle("Search Damn File")]
+[assembly: System.Reflection.AssemblyProduct("Search Damn File")]
+[assembly: System.Reflection.AssemblyVersion(SearchDamnFileStandalone.AppInfo.Version + ".0")]
+[assembly: System.Reflection.AssemblyFileVersion(SearchDamnFileStandalone.AppInfo.Version + ".0")]
+[assembly: System.Reflection.AssemblyInformationalVersion(SearchDamnFileStandalone.AppInfo.Version)]
+
 namespace SearchDamnFileStandalone
 {
+    internal static class AppInfo
+    {
+        public const string Version = "0.2.0";
+    }
+
     internal static class Program
     {
         [STAThread]
@@ -124,7 +135,7 @@ namespace SearchDamnFileStandalone
             CancellationToken token)
         {
             var sw = Stopwatch.StartNew();
-            var stack = new Stack<DirFrame>();
+            var queue = new Queue<DirFrame>();
             var batch = new List<SearchResult>(256);
             var matcher = BuildMatcher(options);
             var contentMatcher = BuildContentMatcher(options);
@@ -137,15 +148,18 @@ namespace SearchDamnFileStandalone
             if (!Directory.Exists(options.RootPath))
                 throw new DirectoryNotFoundException(options.RootPath);
 
-            stack.Push(new DirFrame(options.RootPath, 0));
+            queue.Enqueue(new DirFrame(options.RootPath, 0));
 
-            while (stack.Count > 0 && matched < options.ResultLimit)
+            while (queue.Count > 0 && matched < options.ResultLimit)
             {
                 token.ThrowIfCancellationRequested();
-                var frame = stack.Pop();
+                var frame = queue.Dequeue();
 
                 if (progressClock.ElapsedMilliseconds >= 125)
                 {
+                    // Surface matches found so far instead of holding them until the
+                    // batch reaches 256 or the whole scan finishes.
+                    Flush(batch, onBatch);
                     onProgress(new SearchProgress
                     {
                         Visited = visited,
@@ -207,7 +221,7 @@ namespace SearchDamnFileStandalone
                     if (isDirectory)
                     {
                         if (ShouldTraverse(entry.Name, frame.Depth, options))
-                            stack.Push(new DirFrame(entry.FullName, frame.Depth + 1));
+                            queue.Enqueue(new DirFrame(entry.FullName, frame.Depth + 1));
                         else
                             skipped++;
                     }
@@ -478,11 +492,11 @@ namespace SearchDamnFileStandalone
         private int _dragIndex = -1;
         private int _sortColumn = -1;
         private bool _sortAscending = true;
-        private static readonly string[] _columnHeaders = { "Type", "Name", "Size", "Modified", "Path", "Match" };
+        private static readonly string[] _columnHeaders = { "Path", "Name", "Size", "Modified", "Type", "Match" };
 
         public MainForm()
         {
-            Text = "Search Damn File";
+            Text = "Search Damn File " + AppInfo.Version;
             Width = 1280;
             Height = 820;
             MinimumSize = new Size(1040, 640);
@@ -643,11 +657,11 @@ namespace SearchDamnFileStandalone
             _list.BackColor = Color.White;
             _list.ForeColor = Color.FromArgb(24, 32, 40);
             _list.BorderStyle = BorderStyle.FixedSingle;
-            _list.Columns.Add("Type", 70);
+            _list.Columns.Add("Path", 380);
             _list.Columns.Add("Name", 290);
             _list.Columns.Add("Size", 110, HorizontalAlignment.Right);
             _list.Columns.Add("Modified", 165);
-            _list.Columns.Add("Path", 380);
+            _list.Columns.Add("Type", 70);
             _list.Columns.Add("Match", 240);
             _list.RetrieveVirtualItem += RetrieveVirtualItem;
             return _list;
@@ -679,6 +693,14 @@ namespace SearchDamnFileStandalone
             _stop.Click += delegate { StopSearch(); };
             _subfolders.CheckedChanged += delegate { _depth.Enabled = _subfolders.Checked; };
             _query.KeyDown += delegate(object sender, KeyEventArgs e)
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    StartSearch();
+                }
+            };
+            _root.KeyDown += delegate(object sender, KeyEventArgs e)
             {
                 if (e.KeyCode == Keys.Enter)
                 {
@@ -851,11 +873,11 @@ namespace SearchDamnFileStandalone
         private void RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
             var r = _results[e.ItemIndex];
-            var item = new ListViewItem(r.IsDirectory ? "DIR" : "FILE");
+            var item = new ListViewItem(r.FullPath);
             item.SubItems.Add(r.Name);
             item.SubItems.Add(FormatSize(r.Size));
             item.SubItems.Add(r.ModifiedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"));
-            item.SubItems.Add(r.FullPath);
+            item.SubItems.Add(r.IsDirectory ? "DIR" : "FILE");
             item.SubItems.Add(r.ContentMatch ?? "");
             e.Item = item;
         }
@@ -972,10 +994,10 @@ namespace SearchDamnFileStandalone
                 int cmp;
                 switch (column)
                 {
-                    case 0: cmp = a.IsDirectory.CompareTo(b.IsDirectory); break;
                     case 1: cmp = string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase); break;
                     case 2: cmp = Nullable.Compare(a.Size, b.Size); break;
                     case 3: cmp = a.ModifiedUtc.CompareTo(b.ModifiedUtc); break;
+                    case 4: cmp = a.IsDirectory.CompareTo(b.IsDirectory); break;
                     default: cmp = string.Compare(a.FullPath, b.FullPath, StringComparison.OrdinalIgnoreCase); break;
                 }
                 return _sortAscending ? cmp : -cmp;

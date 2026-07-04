@@ -5,10 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project follows semantic
 versioning when tagged releases are published.
 
-## Unreleased
+## [0.2.0] - 2026-07-04
 
 ### Added
 
+- Press `Enter` in the **Start Search Path** field to start a search, the same as
+  the Search field. Previously only the Search field responded to `Enter`.
 - Export results to CSV: right-click the result list and choose **Export to CSV…** to
   save all current results with Type, Name, Size, Modified, Path, and Match columns.
   The file is UTF-8 encoded and opens correctly in Excel and other spreadsheet apps.
@@ -18,6 +20,10 @@ versioning when tagged releases are published.
 
 ### Changed
 
+- Directory traversal is now breadth-first instead of depth-first. When searching a
+  whole drive such as `C:\`, matches from top-level user folders (Desktop, Documents,
+  Pictures) surface quickly instead of the scan descending deep into system folders
+  like `C:\Windows\WinSxS` first.
 - The search field (formerly "Query") is now the first control on the top bar and
   receives focus automatically on launch, so you can start typing immediately.
 - Renamed labels: "Query" → "Search", "Root" → "Start Search Path".
@@ -26,6 +32,15 @@ versioning when tagged releases are published.
 - Content checkbox and text field are now flush on the same row with consistent
   vertical alignment.
 - Search button now grays out visually while a search is running.
+- Result list column order is now Path, Name, Size, Modified, Type, Match
+  (Type and Path swapped) so the full path leads each row.
+
+### Fixed
+
+- Matched results are now flushed to the list on every progress update (about eight
+  times per second) instead of only when 256 results accumulate or the search
+  finishes. During long scans results now appear live instead of the list staying
+  empty until a batch fills.
 
 ## [0.1.0] - 2026-06-17
 

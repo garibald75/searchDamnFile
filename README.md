@@ -71,7 +71,7 @@ publish\SearchDamnFile.exe
 
 ## Usage Notes
 
-- Press `Enter` in the Search field to start a search.
+- Press `Enter` in the Search field or the Start Search Path field to start a search.
 - Wildcard masks are supported: `*` matches any sequence of characters, `?` matches
   a single character (e.g. `*.cs`, `report_202?_*`). Wildcards anchor to the full
   name or path; use `*keyword*` to match anywhere.

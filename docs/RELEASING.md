@@ -21,9 +21,12 @@ tools\capture-assets.cmd
 5. Create and push a tag:
 
 ```cmd
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
+
+The tag version must match `AppInfo.Version` in `Standalone.cs`, which is also
+embedded in the executable and shown in the window title.
 
 GitHub Actions will build the executable, zip it, and create or update the
 GitHub release for that tag.
