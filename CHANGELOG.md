@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project follows semantic
 versioning when tagged releases are published.
 
+## [0.2.1] - 2026-07-04
+
+### Changed
+
+- Reverted the result list column order back to Type, Name, Size, Modified, Path,
+  Match. The Type/Path swap introduced in 0.2.0 was not wanted.
+
 ## [0.2.0] - 2026-07-04
 
 ### Added

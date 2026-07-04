@@ -19,7 +19,7 @@ namespace SearchDamnFileStandalone
 {
     internal static class AppInfo
     {
-        public const string Version = "0.2.0";
+        public const string Version = "0.2.1";
     }
 
     internal static class Program
@@ -492,7 +492,7 @@ namespace SearchDamnFileStandalone
         private int _dragIndex = -1;
         private int _sortColumn = -1;
         private bool _sortAscending = true;
-        private static readonly string[] _columnHeaders = { "Path", "Name", "Size", "Modified", "Type", "Match" };
+        private static readonly string[] _columnHeaders = { "Type", "Name", "Size", "Modified", "Path", "Match" };
 
         public MainForm()
         {
@@ -657,11 +657,11 @@ namespace SearchDamnFileStandalone
             _list.BackColor = Color.White;
             _list.ForeColor = Color.FromArgb(24, 32, 40);
             _list.BorderStyle = BorderStyle.FixedSingle;
-            _list.Columns.Add("Path", 380);
+            _list.Columns.Add("Type", 70);
             _list.Columns.Add("Name", 290);
             _list.Columns.Add("Size", 110, HorizontalAlignment.Right);
             _list.Columns.Add("Modified", 165);
-            _list.Columns.Add("Type", 70);
+            _list.Columns.Add("Path", 380);
             _list.Columns.Add("Match", 240);
             _list.RetrieveVirtualItem += RetrieveVirtualItem;
             return _list;
@@ -873,11 +873,11 @@ namespace SearchDamnFileStandalone
         private void RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
             var r = _results[e.ItemIndex];
-            var item = new ListViewItem(r.FullPath);
+            var item = new ListViewItem(r.IsDirectory ? "DIR" : "FILE");
             item.SubItems.Add(r.Name);
             item.SubItems.Add(FormatSize(r.Size));
             item.SubItems.Add(r.ModifiedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"));
-            item.SubItems.Add(r.IsDirectory ? "DIR" : "FILE");
+            item.SubItems.Add(r.FullPath);
             item.SubItems.Add(r.ContentMatch ?? "");
             e.Item = item;
         }
@@ -994,10 +994,10 @@ namespace SearchDamnFileStandalone
                 int cmp;
                 switch (column)
                 {
+                    case 0: cmp = a.IsDirectory.CompareTo(b.IsDirectory); break;
                     case 1: cmp = string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase); break;
                     case 2: cmp = Nullable.Compare(a.Size, b.Size); break;
                     case 3: cmp = a.ModifiedUtc.CompareTo(b.ModifiedUtc); break;
-                    case 4: cmp = a.IsDirectory.CompareTo(b.IsDirectory); break;
                     default: cmp = string.Compare(a.FullPath, b.FullPath, StringComparison.OrdinalIgnoreCase); break;
                 }
                 return _sortAscending ? cmp : -cmp;
