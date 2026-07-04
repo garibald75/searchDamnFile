@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project follows semantic
 versioning when tagged releases are published.
 
+## [0.2.2] - 2026-07-04
+
+### Changed
+
+- Moved the **Start Search Path** field directly after the Search field in the top
+  bar, with **Browse** next to it, followed by **Target** and the action buttons.
+
 ## [0.2.1] - 2026-07-04
 
 ### Changed

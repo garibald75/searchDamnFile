@@ -19,7 +19,7 @@ namespace SearchDamnFileStandalone
 {
     internal static class AppInfo
     {
-        public const string Version = "0.2.1";
+        public const string Version = "0.2.2";
     }
 
     internal static class Program
@@ -532,47 +532,46 @@ namespace SearchDamnFileStandalone
 
         private Control BuildTop()
         {
-            var p = PanelGrid(7, 2);
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 18));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+            var p = PanelGrid(6, 2);
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84));
             p.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
             p.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
 
             p.Controls.Add(Label("Search"), 0, 0);
-            p.Controls.Add(Label("Target"), 1, 0);
-            p.Controls.Add(Label("Start Search Path"), 3, 0);
+            p.Controls.Add(Label("Start Search Path"), 1, 0);
+            p.Controls.Add(Label("Target"), 3, 0);
 
             StyleText(_query);
             p.Controls.Add(_query, 0, 1);
+
+            _root.Text = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            StyleText(_root);
+            p.Controls.Add(_root, 1, 1);
+
+            _browse.Text = "Browse";
+            StyleButton(_browse, false);
+            p.Controls.Add(_browse, 2, 1);
 
             _target.DropDownStyle = ComboBoxStyle.DropDownList;
             _target.Items.Add("Name");
             _target.Items.Add("Full path");
             _target.SelectedIndex = 0;
             StyleCombo(_target);
-            p.Controls.Add(_target, 1, 1);
-
-            _root.Text = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            StyleText(_root);
-            p.Controls.Add(_root, 3, 1);
-
-            _browse.Text = "Browse";
-            StyleButton(_browse, false);
-            p.Controls.Add(_browse, 4, 1);
+            p.Controls.Add(_target, 3, 1);
 
             _search.Text = "Search";
             StyleButton(_search, true);
-            p.Controls.Add(_search, 5, 1);
+            p.Controls.Add(_search, 4, 1);
 
             _stop.Text = "Stop";
             _stop.Enabled = false;
             StyleButton(_stop, false);
-            p.Controls.Add(_stop, 6, 1);
+            p.Controls.Add(_stop, 5, 1);
 
             return p;
         }
